@@ -1,1 +1,2 @@
-COPYRIGTH Guillem96 & Markankaro
+input: dimacs.txt
+output: out.txt
