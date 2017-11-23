@@ -60,6 +60,53 @@ class Formula:
         return self.num_literals
 
 
+    def to_1_3(self):
+        new_formula = Formula(self.num_literals,self.hard_cost)
+
+        for soft_clause in self.soft_clauses:
+            new_formula.add_clauses(new_formula.__convert_soft(soft_clause))
+
+        for hard_clauses in self.hard_clauses:
+            new_formula.add_clauses(new_formula.__convert_hard(hard_clauses))
+
+        return new_formula
+
+
+    def __convert_soft(self, soft):
+        new_literal = self.create_literal()
+        new_soft = Clause(soft.cost, [new_literal * (-1)]) # (!b,soft_cost)
+        soft.add(new_literal)
+        new_hard = Clause(self.hard_cost, soft.literals)
+        hardslist = self.__convert_hard(new_hard)
+        return [new_soft] + hardslist
+
+
+    def __convert_hard(self, hard):
+        clause = Clause(self.hard_cost,[])
+        clause_list = []
+
+        clause.add(hard.literals[0])
+        literals_left = len(hard.literals) - 1
+
+        for literal in hard.literals[1:]:
+            if len(clause.literals) == 2:
+                if literals_left == 1:
+                    clause.add(literal)
+                else:
+                    literal_aux=self.create_literal()
+                    clause.add(literal_aux)
+                    clause_list+=[clause]
+                    clause = Clause(self.hard_cost,[literal_aux * (-1)])
+                    clause.add(literal)
+                    literals_left-=1
+
+            elif len(clause.literals) == 1:
+                clause.add(literal)
+                literals_left-=1
+
+        return clause_list + [clause]
+
+
     def __str__(self):
         # Calculate num_clauses
         num_clauses = len(self.hard_clauses) + len(self.soft_clauses)
